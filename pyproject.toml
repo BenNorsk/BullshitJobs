@@ -1,0 +1,45 @@
+[build-system]
+requires = ["poetry>=1.1.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "bullshit_jobs"
+version = "1.0"
+description = "TBD"
+readme = "README.md"
+authors = [
+    "Benjamin L. Brückner"
+]
+license = "MIT"
+keywords = ["synthetic control", "bullshit jobs", "NLP"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Machine Learning",
+    "Topic :: Software Development :: Libraries"
+]
+repository = "https://github.com/BenNorsk/BullshitJobs"  # Hidden for anonymous grading
+homepage = "https://bruecknerdata.com"
+documentation = "https://github.com/BenNorsk/BullshitJobs"
+
+
+# TBD [tool.poetry.scripts]
+# TBD
+
+[tool.poetry.urls]
+"Documentation" = "#"
+"Source" = "#"
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pandas = "^2.2.3"
