@@ -3,7 +3,8 @@ import nltk
 import re
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
-from bullshit_jobs.load_data import _load_data
+from bullshit_jobs.load_data._load_data import _load_data
+from bullshit_jobs.load_data._load_data import _save_data 
 
 
 def _preprocess_text(text: str) -> str:
@@ -75,4 +76,17 @@ def _preprocess_column(df: pd.DataFrame, col: str = "cons") -> pd.DataFrame:
     
     return df
 
+if __name__ == "__main__":
+    # Load the data
+    df = _load_data()
+    
+    # Preprocess the text in the cons column
+    df = _preprocess_column(df, col="cons")
+    
+    print("The text has been preprocessed:")
+    print(df)
+
+    # Save the preprocessed data
+    _save_data(df, filename="data_processed")
+    _save_data(df, filename="data_processed")
 
