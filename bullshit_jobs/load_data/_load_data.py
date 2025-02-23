@@ -43,6 +43,10 @@ def _clean_data(df: pd.DataFrame, selected_companies: pd.DataFrame) -> pd.DataFr
     # Drop rows where conversion failed
     df = df.dropna(subset=['date'])
 
+    # Dataframe Pre-cutting the date
+    print("Dataframe before cutting the date:")
+    print(df)
+
     # Filter dates within range
     df = df[(df['date'] < '2023-01-08') & (df['date'] > '2020-04-01')]
 
@@ -51,6 +55,9 @@ def _clean_data(df: pd.DataFrame, selected_companies: pd.DataFrame) -> pd.DataFr
 
     # Remove duplicates
     df = df.drop_duplicates()
+
+    # Create a new column 'id' with a unique identifier
+    df['id'] = range(1, len(df) + 1)
 
     return df
 
@@ -75,11 +82,10 @@ def _load_data() -> pd.DataFrame:
     selected_companies = pd.read_excel(excel, sheet_name=sheet)
 
     # Clean the data
+    print("The data is being loaded and cleaned...")
+    print(df)
     df = _clean_data(df, selected_companies)
     print("The data has been loaded and cleaned:")
-
-    # Create a new column 'id' with a unique identifier
-    df['id'] = range(1, len(df) + 1)
 
     # Show the first few rows
     print(df)
@@ -142,6 +148,12 @@ def _quick_load(filename: str = "data.pkl", filetype: str = "pkl") -> pd.DataFra
         raise ValueError("Filetype must be 'csv' or 'pkl'")
     print(f"The data has been loaded from {path}")
     return df
+
+
+if __name__ == "__main__":
+    # Load the data
+    df = _load_new_and_save()
+    print(df)
 
 
 
