@@ -3,7 +3,7 @@ import nltk
 import re
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
-from bullshit_jobs.load_data._load_data import _load_data
+from bullshit_jobs.load_data._load_data import _quick_load
 from bullshit_jobs.load_data._load_data import _save_data 
 
 
@@ -30,23 +30,18 @@ def _preprocess_text(text: str) -> str:
 
     # 1. Convert all text to lowercase
     text = text.lower()
-    print("1. All text was converted to lowercase.")
 
     # 2. Remove punctuations
     text = re.sub(r'[^\w\s]', '', text)
-    print("2. Punctuations were removed.")
 
     # 3. Replace numbers with #
     text = re.sub(r'\d+', '#', text)
-    print("3. Numbers were replaced with #.")
 
     # 4. Remove stopwords
     text = ' '.join([word for word in text.split() if word not in stop_words])
-    print("4. Stopwords were removed.")
 
     # 5. Stemming
     text = ' '.join([stemmer.stem(word) for word in text.split()])
-    print("5. Words were stemmed.")
     
     return text
 
@@ -78,8 +73,11 @@ def _preprocess_column(df: pd.DataFrame, col: str = "cons") -> pd.DataFrame:
 
 if __name__ == "__main__":
     # Load the data
-    df = _load_data()
+    df = _quick_load("data.pkl")
     
+    print("The data has been loaded:")
+    print(df)
+
     # Preprocess the text in the cons column
     df = _preprocess_column(df, col="cons")
     

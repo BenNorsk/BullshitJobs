@@ -1,6 +1,8 @@
 import pandas as pd
 from bullshit_jobs.load_data._load_data import _quick_load, _save_data
 import pandas as pd
+import math
+from scipy.stats import norminvgauss
 
 
 def _assign_continuous_bs_score(
@@ -54,9 +56,16 @@ def _make_continuous_dict_bs_score(
     # Apply the _assign_continuous_bs_score function to the DataFrame
     df[output_col] = df[input_col].apply(lambda x: _assign_continuous_bs_score(x, words, threshold))
 
-
     # Normalise the BS score by dividing the output_col by the length of the input_col.split()
-    df[output_col] = df[output_col] / df[input_col].apply(lambda x: len(x.split()))
+    df[output_col] = (df[output_col] / df[input_col].apply(lambda x: len(x.split()))) * math.log(1 + len(df[input_col].apply(lambda x: len(x.split()))))
+
+    # Fit a normal inverse Gaussian distribution
+    gaussian = df.copy()
+    gaussian = gaussian[gaussian[output_col] > 0]
+    params = norminvgauss.fit(gaussian[output_col])
+
+    # Apply the normal inverse Gaussian distribution to the data
+    df[f'{output_col}_norminvgauss'] = df[output_col].apply(lambda x: norminvgauss.cdf(x, params[0], params[1], params[2], params[3]) if x > 0 else 0)
 
     return df
 
@@ -99,10 +108,10 @@ def _create_dictionary_bs_score() -> None:
     """
 
     # Load the data
-    df = _quick_load("data_processed.pkl", filetype="pkl")
+    df = _quick_load("data_processed.pkl")
 
     # Load the list of bureaucratic words
-    words = _quick_load("bureaucratic_words.pkl", filetype="pkl")
+    words = _quick_load("bureaucratic_words.pkl")
 
     # Create the continuous dictionary-based bullshit score
     df = _make_continuous_dict_bs_score(df, words, threshold=0)
@@ -112,6 +121,9 @@ def _create_dictionary_bs_score() -> None:
 
     # Descibre bs_score_cont_dict
     print(df['bs_score_cont_dict'].describe())
+
+    # Descibre bs_score_cont_dict_norminvgauss
+    print(df['bs_score_cont_dict_norminvgauss'].describe())
 
 
     # Descibre bs_score_binary_dict
@@ -123,10 +135,10 @@ def _create_dictionary_bs_score() -> None:
         print("The data is concatenated with the bs_score columns:")
 
         # Drop the columns if they already exist
-        df_with_bs_score.drop(columns=['bs_score_cont_dict', 'bs_score_binary_dict'], inplace=True)
+        df_with_bs_score.drop(columns=['bs_score_cont_dict', 'bs_score_cont_dict_norminvgauss', 'bs_score_binary_dict'], inplace=True)
 
-        # Merge the dataframes on the 'id' column
-        df_with_bs_score = pd.merge(df_with_bs_score, df[['id', 'bs_score_cont_dict', 'bs_score_binary_dict']], on='id')
+        # Merge the dataframes on the 'id' column and keep the id column
+        df_with_bs_score = pd.merge(df_with_bs_score, df[['id', 'bs_score_cont_dict', 'bs_score_cont_dict_norminvgauss' 'bs_score_binary_dict']], on='id')
 
 
     except:
