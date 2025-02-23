@@ -30,6 +30,26 @@ def _clean_data(df: pd.DataFrame, selected_companies: pd.DataFrame) -> pd.DataFr
     # Add the field 'return_to_office' and 'sector from the selected companies to the reviews
     selected_companies = selected_companies[["firm", "return_to_office", "sector"]]
     df = df.merge(selected_companies, on="firm", how="left")
+
+    # Remove leading/trailing spaces, replace empty strings with NaN
+    df['date'] = df['date'].astype(str).str.strip().replace("", pd.NA)
+
+    # Drop rows where 'date' is NaN
+    df = df.dropna(subset=['date'])
+
+    # Convert date column, allowing for mixed formats
+    df['date'] = pd.to_datetime(df['date'], format='%b %d, %Y', errors='coerce')
+
+    # Drop rows where conversion failed
+    df = df.dropna(subset=['date'])
+
+    # Filter dates within range
+    df = df[(df['date'] < '2023-01-08') & (df['date'] > '2020-04-01')]
+
+    # Convert the return_to_office column to datetime # 2022-06-01
+    df['return_to_office'] = pd.to_datetime(df['return_to_office'], format='%Y-%m-%d', errors='coerce')
+
+    # Remove duplicates
     df = df.drop_duplicates()
 
     return df
@@ -57,6 +77,11 @@ def _load_data() -> pd.DataFrame:
     # Clean the data
     df = _clean_data(df, selected_companies)
     print("The data has been loaded and cleaned:")
+
+    # Create a new column 'id' with a unique identifier
+    df['id'] = range(1, len(df) + 1)
+
+    # Show the first few rows
     print(df)
     
     return df
@@ -92,7 +117,7 @@ def _load_new_and_save() -> pd.DataFrame:
     return df
 
 
-def _quick_load(filename: str = "data.pkl") -> pd.DataFrame:
+def _quick_load(filename: str = "data.pkl", filetype: str = "pkl") -> pd.DataFrame:
     """
     Loads a saved dataframe from the data folder.
 
@@ -100,6 +125,8 @@ def _quick_load(filename: str = "data.pkl") -> pd.DataFrame:
     -----------
     filename: str
         The name of the file to load (pkl).
+    filetype: str
+        The type of file to load (pkl or csv).
 
     Returns:
     --------
@@ -107,9 +134,16 @@ def _quick_load(filename: str = "data.pkl") -> pd.DataFrame:
         The loaded DataFrame.
     """
     path = pathlib.Path(__file__).parent.parent.parent / "data" / filename
-    df = pd.read_pickle(path)
+    if filetype == "csv":
+        df = pd.read_csv(path)
+    elif filetype == "pkl":
+        df = pd.read_pickle(path)
+    else:
+        raise ValueError("Filetype must be 'csv' or 'pkl'")
     print(f"The data has been loaded from {path}")
     return df
+
+
 
 
 
