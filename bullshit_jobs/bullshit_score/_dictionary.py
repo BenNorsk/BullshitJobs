@@ -39,8 +39,7 @@ def _assign_continuous_bs_score(
     # Add the score for each word in the text
     for word in text:
         if word in word_list:
-            score_addition = words[words["word"] == word]["count"].values[0]
-            bs_score += score_addition
+            bs_score += 1
     
     return bs_score
 
@@ -57,7 +56,7 @@ def _make_continuous_dict_bs_score(
     df[output_col] = df[input_col].apply(lambda x: _assign_continuous_bs_score(x, words, threshold))
 
     # Normalise the BS score by dividing the output_col by the length of the input_col.split()
-    df[output_col] = (df[output_col] / df[input_col].apply(lambda x: len(x.split()))) * math.log(1 + len(df[input_col].apply(lambda x: len(x.split()))))
+    df[output_col] = (df[output_col] / df[input_col].apply(lambda x: 2 + len(x.split()))) * math.log(2 + len(df[input_col].apply(lambda x: len(x.split()))))
 
     # Fit a normal inverse Gaussian distribution
     gaussian = df.copy()
@@ -114,7 +113,7 @@ def _create_dictionary_bs_score() -> None:
     words = _quick_load("bureaucratic_words.pkl")
 
     # Create the continuous dictionary-based bullshit score
-    df = _make_continuous_dict_bs_score(df, words, threshold=0)
+    df = _make_continuous_dict_bs_score(df, words, threshold=2)
 
     # Create the binary dictionary-based bullshit score
     df = _make_binary_dict_bs_score(df, words)
@@ -124,7 +123,6 @@ def _create_dictionary_bs_score() -> None:
 
     # Descibre bs_score_cont_dict_norminvgauss
     print(df['bs_score_cont_dict_norminvgauss'].describe())
-
 
     # Descibre bs_score_binary_dict
     print(df['bs_score_binary_dict'].describe())
