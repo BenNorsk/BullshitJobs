@@ -1,6 +1,8 @@
 # Custom
 *.pkl
 *.csv
+Modeflfile
+*.gguf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
