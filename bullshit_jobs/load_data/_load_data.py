@@ -57,7 +57,7 @@ def _clean_data(df: pd.DataFrame, selected_companies: pd.DataFrame) -> pd.DataFr
     df = df.drop_duplicates()
 
     # Create a new column 'id' with a unique identifier
-    df['id'] = range(1, len(df) + 1)
+    df['review_id'] = range(1, len(df) + 1)
 
     return df
 
@@ -73,11 +73,11 @@ def _load_data() -> pd.DataFrame:
     """
 
     # Load in the reviews
-    path = pathlib.Path(__file__).parent.parent.parent / "data" / "reviews.csv"
+    path = f'./data/reviews.csv'
     df = pd.read_csv(path)
 
     # Load in the selected companies
-    excel = pathlib.Path(__file__).parent.parent.parent / "data" / "Tracking_Return_To_Office.xlsx"
+    excel = f'data/Tracking_Return_To_Office.xlsx'
     sheet = "RTO"
     selected_companies = pd.read_excel(excel, sheet_name=sheet)
 
@@ -93,7 +93,7 @@ def _load_data() -> pd.DataFrame:
     return df
 
 
-def _save_data(df: pd.DataFrame, filename: str = "data") -> None:
+def _save_data(df: pd.DataFrame, filename: str) -> None:
     """
     Saves the data to a pkl file.
 
@@ -102,7 +102,7 @@ def _save_data(df: pd.DataFrame, filename: str = "data") -> None:
     filename: str
         The name of the file to save the data to.
     """
-    path = pathlib.Path(__file__).parent.parent.parent / "data" / filename
+    path = f'./data/{filename}'
     df.to_pickle(f'{path}.pkl')
     df.to_csv(f'{path}.csv', index=False)
 
@@ -119,11 +119,11 @@ def _load_new_and_save() -> pd.DataFrame:
         The preprocessed DataFrame.
     """
     df = _load_data()
-    _save_data(df)
+    _save_data(df, "data")
     return df
 
 
-def _quick_load(filename: str = "data.pkl", filetype: str = "pkl") -> pd.DataFrame:
+def _quick_load(filename: str, filetype: str = "pkl") -> pd.DataFrame:
     """
     Loads a saved dataframe from the data folder.
 
@@ -139,7 +139,7 @@ def _quick_load(filename: str = "data.pkl", filetype: str = "pkl") -> pd.DataFra
     df: pd.DataFrame
         The loaded DataFrame.
     """
-    path = pathlib.Path(__file__).parent.parent.parent / "data" / filename
+    path = f'./data/{filename}'
     if filetype == "csv":
         df = pd.read_csv(path)
     elif filetype == "pkl":
