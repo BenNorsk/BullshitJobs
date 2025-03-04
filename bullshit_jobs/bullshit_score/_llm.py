@@ -190,6 +190,9 @@ def _create_llm_bs_score(nr: Optional[str] = None):
     else:
         df = _quick_load(f"llm/data_with_bs_score_{nr}.pkl")
 
+    # Load the save counter 
+    i = 0
+
     # Iterate over all observations
     for index, row in df.iterrows():
         review = row["cons"]
@@ -216,7 +219,15 @@ def _create_llm_bs_score(nr: Optional[str] = None):
             print(llm_prompt_copy)
             
             # Send the text to the LLM model
-            bs_score = _get_new_bs_score_llm(llm_prompt_copy, nr)
+            try:
+                bs_score = _get_new_bs_score_llm(llm_prompt_copy, nr)
+            except:
+                print(f'The bs_score_llm is None. Skipping this review.')
+                continue
+
+            # Increase the save counter by one
+            i += 1
+            print(f'Counter: {i}')
 
             if bs_score is None:
                 print(f'The bs_score_llm is None. Skipping this review.')
@@ -226,14 +237,23 @@ def _create_llm_bs_score(nr: Optional[str] = None):
                 # Save the bs_score to the dataframe at the review id
                 df.loc[df["review_id"] == review_id, "bs_score_llm"] = bs_score
 
-                if nr is None:
-                    # Save the data
-                    _save_data(df, "data_with_bs_score")
-                else:
-                    _save_data(df, f"llm/data_with_bs_score_{nr}")
+                if i >= 60:
+                    print("Saving the data.")
+                    if nr is None:
+                        # Save the data
+                        _save_data(df, "data_with_bs_score")
+                    else:
+                        _save_data(df, f"llm/data_with_bs_score_{nr}")
+                    
+                    # Reset the save counter
+                    i = 0
         else:
             print(f'The bs_score_llm is already observed ({bs_score}). Skipping this review.')
-
+    if nr is None:
+        # Save the data
+        _save_data(df, "data_with_bs_score")
+    else:
+        _save_data(df, f"llm/data_with_bs_score_{nr}")
     return
 
 def _split_data_into_chunks():

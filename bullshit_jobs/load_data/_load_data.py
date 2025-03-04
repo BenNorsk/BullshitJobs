@@ -149,11 +149,49 @@ def _quick_load(filename: str, filetype: str = "pkl") -> pd.DataFrame:
     print(f"The data has been loaded from {path}")
     return df
 
+def _remerge_data() -> pd.DataFrame:
+    """
+    Merges the data from the three dataframes.
+
+    Returns:
+    --------
+    df: pd.DataFrame
+        The merged DataFrame.
+    """
+    # Load the data
+    df1 = _quick_load("llm/data_with_bs_score_1.pkl")
+    df2 = _quick_load("llm/data_with_bs_score_2.pkl")
+    df3 = _quick_load("llm/data_with_bs_score_3.pkl")
+    
+    # Merge the data
+    df = pd.concat([df1, df2, df3])
+
+    # Drop all columns where either bs_score_binary_dict or bs_score_llm is NaN
+    df = df.dropna(subset=["bs_score_binary_dict", "bs_score_llm"])
+
+    # Turn the bs_score_llm into a float
+    df["bs_score_llm"] = df["bs_score_llm"].astype(float)
+
+    # Replace 0.75 with 0.8 and 0.85 with 0.9
+    df["bs_score_llm"] = df["bs_score_llm"].replace(0.75, 0.8).replace(0.85, 0.9)
+
+    # Show the unique values of bs_score_llm
+    print(df["bs_score_llm"].unique())
+
+    # Show the summary statistics of bs_score_llm
+    print(df["bs_score_llm"].describe())
+
+    # Save the data
+    _save_data(df, "data_with_bs_scores")
+
+    return df
+
 
 if __name__ == "__main__":
     # Load the data
     df = _load_new_and_save()
     print(df)
+
 
 
 
