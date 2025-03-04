@@ -50,10 +50,10 @@ def _select_random_sample() -> pd.DataFrame:
 
     # Drop all columns except the following
     # cons, review_id
-    sample_df = sample_df[["cons", "review_id"]]
+    sample_df = sample_df[["cons", "review_id", "bs_score_llm"]]
 
     # Save the sample df
-    _save_data(sample_df, "manual_evaluation_task")
+    _save_data(sample_df, "manual_evaluation_task_review")
 
     return sample_df
 
@@ -68,21 +68,21 @@ def _evaluate_bs_scores_manually() -> pd.DataFrame:
     """
     # Load the data
     df = _quick_load("data_with_bs_scores.pkl")
-    evaluation = pd.read_excel("./data/manual_evaluation/manual_evaluation_task_maike_filled_in.xlsx")
+    evaluation = pd.read_excel("./data/manual_evaluation/manual_evaluation_task_ibrahim_filled_in.xlsx")
     print(evaluation)
 
     # Merge the data on review_id
     df = pd.merge(df, evaluation, on="review_id")
 
     # Drop all columns where score_maike is NaN
-    df = df.dropna(subset=["score_maike"])
+    df = df.dropna(subset=["score_ibrahim"])
     print(df)
 
     # Show the correlation between score_maike and bs_score_llm
-    print(df["score_maike"].corr(df["bs_score_llm"]))
-    print(df["score_maike"].corr(df["bs_score_binary_dict"]))
+    print(df["score_ibrahim"].corr(df["bs_score_llm"]))
+    print(df["score_ibrahim"].corr(df["bs_score_binary_dict"]))
 
-    y = df[["score_maike"]]
+    y = df[["score_ibrahim"]]
     X = df[["bs_score_llm"]]
 
     # Fit the linear regression model
@@ -94,8 +94,8 @@ def _evaluate_bs_scores_manually() -> pd.DataFrame:
     print(results.summary())
 
     # Fit the linear regression model for bs_score_binary_dict
-    y = df[["score_maike"]]
-    X = df[["bs_score_binary_dict"]]
+    y = df[["score_ibrahim"]]
+    X = df[["bs_score_llm"]]
     X = sm.add_constant(X)
     model = sm.OLS(y, X)
     results = model.fit()
@@ -104,11 +104,11 @@ def _evaluate_bs_scores_manually() -> pd.DataFrame:
     print(results.summary())
 
     # Make a scatter plot with the linear regression line
-    plt.scatter(df["bs_score_binary_dict"], df["score_maike"])
-    plt.plot(df["bs_score_binary_dict"], results.predict(X), color="red")
-    plt.xlabel("bs_score_binary_dict")
-    plt.ylabel("score_maike")
-    plt.savefig("./data/manual_evaluation/bs_score_binary_dict_vs_score_maike.png")
+    plt.scatter(df["bs_score_llm"], df["score_ibrahim"])
+    plt.plot(df["bs_score_llm"], results.predict(X), color="red")
+    plt.xlabel("bs_score_llm")
+    plt.ylabel("score_ibrahim")
+    plt.savefig("./data/manual_evaluation/bs_score_llm_vs_score_ibrahim.png")
 
     return
 
