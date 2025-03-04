@@ -42,7 +42,8 @@ def _preprocess_text(text: str) -> str:
 
     # 5. Stemming
     text = ' '.join([stemmer.stem(word) for word in text.split()])
-    
+
+    print(f'The data has been preprocessed: {text}')
     return text
 
 
@@ -72,12 +73,10 @@ def _preprocess_column(df: pd.DataFrame, col: str = "cons") -> pd.DataFrame:
     return df
 
 if __name__ == "__main__":
+    
     # Load the data
     df = _quick_load("data.pkl")
     
-    print("The data has been loaded:")
-    print(df)
-
     # Preprocess the text in the cons column
     df = _preprocess_column(df, col="cons")
     
@@ -85,6 +84,5 @@ if __name__ == "__main__":
     print(df)
 
     # Save the preprocessed data
-    _save_data(df, filename="data_processed")
     _save_data(df, filename="data_processed")
 

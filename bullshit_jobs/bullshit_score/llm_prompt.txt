@@ -1,0 +1,18 @@
+The Cambridge Dictionary describes something bureaucratic as something "involving complicated rules and processes that make something slow and difficult".
+
+I am now showing you a job review. The review describes the negative aspects of the job:
+
+<review>
+{{REVIEW}}
+</review>
+
+On a scale from 0.0 to 1.0, rate how much 'bureaucratic bullshit work' is described in the given review. 
+A bs_score of 0.0 means that the review is not indicative of any 'bureaucratic bullshit work', while a bs_score of 1.0 means that this review describes heavily bureaucratic bullshit work.
+Reason your answer and look for tangible evidence, but keep yourself very brief.
+
+Return your final score in a JSON object; i.e.
+
+{"bs_score": 0.4} # Example Score
+
+In all circumstances, explain your reasoning and show your final assessment in the JSON object. If you feel that no bureaucratic bullshit work is described, return {"bs_score": 0.0}
+
