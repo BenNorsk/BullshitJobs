@@ -132,7 +132,7 @@ def _quick_load(filename: str, filetype: str = "pkl") -> pd.DataFrame:
     filename: str
         The name of the file to load (pkl).
     filetype: str
-        The type of file to load (pkl or csv).
+        The type of file to load (pkl, xlsx, or csv).
 
     Returns:
     --------
@@ -144,8 +144,10 @@ def _quick_load(filename: str, filetype: str = "pkl") -> pd.DataFrame:
         df = pd.read_csv(path)
     elif filetype == "pkl":
         df = pd.read_pickle(path)
+    elif filetype == "xlsx":
+        df = pd.read_excel(path)
     else:
-        raise ValueError("Filetype must be 'csv' or 'pkl'")
+        raise ValueError("Filetype must be 'csv' or 'pkl' or 'xlsx'.")
     print(f"The data has been loaded from {path}")
     return df
 
