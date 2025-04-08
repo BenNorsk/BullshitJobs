@@ -112,7 +112,28 @@ def _evaluate_bs_scores_manually() -> pd.DataFrame:
 
     return
 
+def _select_random_sample_charlotte():
+
+    # Set a seed of 42 for reproducibility
+    np.random.seed(42)
+    df = _quick_load("data_with_bs_scores.pkl")
+    # Turn the "bs_score_llm" column into a float
+    df["bs_score"] = df["bs_score_llm"].astype(float)
+    
+    sample_df = df.sample(100)
+
+    # Exclude the irrelevant columns
+    sample_df = sample_df[["cons", "review_id", "bs_score_llm", "bs_score_binary_dict"]]
+
+    # Save the sample df
+    _save_data(sample_df, "manual_evaluation_task_charlotte")
+
+    return sample_df
+
 if __name__ == "__main__":
     # df = _select_random_sample()
     # print(df)
-    _evaluate_bs_scores_manually()
+    df = _select_random_sample_charlotte()
+    print(df)
+    print(df["bs_score_llm"].describe())
+    print(df["bs_score_binary_dict"].describe())
