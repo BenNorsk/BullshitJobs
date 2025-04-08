@@ -61,10 +61,11 @@ def _validate_bs_score(
 
 if __name__ == "__main__":
     # Load the data
-    df = _quick_load("data_with_bs_score.pkl")
+    df = _quick_load("data_with_bs_scores.pkl")
 
     # Validate the bullshit score
-    _validate_bs_score(df, "bs_score_binary_dict")
+    # _validate_bs_score(df, "bs_score_binary_dict")
+    _validate_bs_score(df, "bs_score_llm")
 
     # Conclusion
     print("Only the binary dictionary-based bullshit score is validated.")
