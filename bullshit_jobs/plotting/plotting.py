@@ -4,6 +4,11 @@ import matplotlib as mpl
 import pandas as pd
 import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from collections import Counter
+from matplotlib.lines import Line2D
 
 
 def _run_ols_regression(y, x):
@@ -28,68 +33,91 @@ def _run_ols_regression(y, x):
     return model
 
 
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from collections import Counter
-
-
 def plot_simple_uniform_instrument_validation(y, x, x_1, x_2):
     fig, ax = plt.subplots()
 
-    # Convert to numpy arrays
+    # Set global font
+    mpl.rcParams['font.family'] = 'Futura'
+
+    # Convert inputs to numpy arrays
     x = np.array(x)
     y = np.array(y)
     x_1 = np.array(x_1)
     x_2 = np.array(x_2)
 
-    # Compute frequency of each (x, y) pair
+    # Frequency count of each (x, y) pair
     xy_pairs = list(zip(x, y))
     freq_counter = Counter(xy_pairs)
-    size = np.array([freq_counter[(xi, yi)] * 20 for xi, yi in zip(x, y)])  # base size is 20 per count
+    size = np.array([freq_counter[(xi, yi)] * 12 for xi, yi in zip(x, y)])
 
-    # Prepare sets for (x₁, y) and (x₂, y)
+    # Determine valid entries for x₁ and x₂
     valid_x1 = ~np.isnan(x_1)
     valid_x2 = ~np.isnan(x_2)
     x1_set = set(zip(x_1[valid_x1], y[valid_x1]))
     x2_set = set(zip(x_2[valid_x2], y[valid_x2]))
 
-    # Determine color groupings
-    in_x1 = np.array([(xi, yi) in x1_set for xi, yi in zip(x, y)])
-    in_x2 = np.array([(xi, yi) in x2_set for xi, yi in zip(x, y)])
-    in_both = in_x1 & in_x2
-    only_x1 = in_x1 & ~in_both
-    only_x2 = in_x2 & ~in_both
+    # Plot 'x' markers for observations in x₁
+    for xi, yi in x1_set:
+        mask = (x == xi) & (y == yi)
+        ax.scatter(
+            x[mask], y[mask],
+            marker='x',
+            s=size[mask],
+            color='#a0a0a0',
+            edgecolors='black',
+            linewidths=0.5
+        )
 
-    # Plot colored points with size based on frequency
-    ax.scatter(x[only_x1], y[only_x1], color='#95C591', label='Only in x₁', s=size[only_x1])
-    ax.scatter(x[only_x2], y[only_x2], color='#2B3674', label='Only in x₂', s=size[only_x2])
-    ax.scatter(x[in_both], y[in_both], color='#36868D', label='In both x₁ & x₂', s=size[in_both])
+    # Plot 'o' markers for observations in x₂
+    for xi, yi in x2_set:
+        mask = (x == xi) & (y == yi)
+        ax.scatter(
+            x[mask], y[mask],
+            marker='o',
+            s=size[mask],
+            facecolors='none',
+            edgecolors='#a0a0a0',
+            linewidths=0.5
+        )
 
     # Fit and plot main regression line (x on y)
     reg_all = LinearRegression().fit(x.reshape(-1, 1), y)
     x_range = np.linspace(x.min(), x.max(), 100).reshape(-1, 1)
     y_pred_all = reg_all.predict(x_range)
-    ax.plot(x_range, y_pred_all, label='Regression: x on y', linestyle='--', color='black')
+    ax.plot(x_range, y_pred_all, label='Regression Line', linestyle='-', color='black')
 
-    # Regression for x₁ (drop NaNs)
+    # Regression for x₁
     if np.any(valid_x1):
         reg_x1 = LinearRegression().fit(x_1[valid_x1].reshape(-1, 1), y[valid_x1])
         y_pred_x1 = reg_x1.predict(x_range)
-        ax.plot(x_range, y_pred_x1, label='x₁ on y', linestyle='-', color='#95C591')
+        ax.plot(x_range, y_pred_x1, label='Regression for Validator 1', linestyle='--', color='#4997CD')
 
-    # Regression for x₂ (drop NaNs)
+    # Regression for x₂
     if np.any(valid_x2):
         reg_x2 = LinearRegression().fit(x_2[valid_x2].reshape(-1, 1), y[valid_x2])
         y_pred_x2 = reg_x2.predict(x_range)
-        ax.plot(x_range, y_pred_x2, label='x₂ on y', linestyle='-', color='#2B3674')
+        ax.plot(x_range, y_pred_x2, label='Regression for Validator 2', linestyle='--', color='#CA3F38')
 
-    # Labels and legend
-    ax.set_xlabel("x")
-    ax.set_ylabel("y (bs_score_llm)")
-    ax.set_title("Instrument Validation with Source-Based Coloring and Frequency Scaling")
-    ax.legend()
+    # Axis labels with Futura
+    ax.set_xlabel("Bullshit Score Assigned by the Validators", fontname='Futura')
+    ax.set_ylabel("Bullshit Score Assigned by the LLM", fontname='Futura')
+
+    # Make sure tick labels use Futura as well
+    for label in ax.get_xticklabels() + ax.get_yticklabels():
+        label.set_fontname('Futura')
+        label.set_fontsize(8)
+
+    # Custom legend entries for the data points, added last
+    custom_legend = [
+        Line2D([0], [0], marker='x', color='black', linestyle='None', markersize=8, label='Data Point of Validator 1'),
+        Line2D([0], [0], marker='o', color='black', linestyle='None', markersize=8, markerfacecolor='none', label='Data Point of Validator 2')
+    ]
+
+    ax.legend(handles=ax.get_legend_handles_labels()[0] + custom_legend, fontsize=10)
     plt.tight_layout()
+
+    # Save the figure
+    plt.savefig("figures/instrument_validation/uniform_instrument_validation.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 
