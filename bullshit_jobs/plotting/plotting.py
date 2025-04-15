@@ -271,23 +271,23 @@ def plot_ratings_regressions(df) -> None:
     # Plot Dictionary scores
     sizes_dict = get_sizes(df["bs_score_binary_dict"], df["rating"])
     plt.scatter(df["bs_score_binary_dict"], df["rating"], 
-                s=sizes_dict, alpha=1.0, label="Data Point of Dict. BS-Score", marker='x', color="#a0a0a0", linewidths=0.5)
+                s=sizes_dict, alpha=1.0, label="Data Point of Dict. BS-Score", marker='x', color="#a0a0a0", linewidths=0.7)
     
     # Plot LLM scores
     sizes_llm = get_sizes(df["bs_score_llm"], df["rating"])
     plt.scatter(df["bs_score_llm"], df["rating"], 
-                s=sizes_llm, alpha=1.0, label="Data Point of LLM BS-Score", marker='o', color="none", facecolors='none', edgecolors="#a0a0a0", linewidths=0.5)
+                s=sizes_llm, alpha=1.0, label="Data Point of LLM BS-Score", marker='o', color="none", facecolors='none', edgecolors="#a0a0a0", linewidths=0.7)
 
 
     # Make the axis labels larger
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14, ticks=[1, 2, 3, 4, 5], labels=["1", "2", "3", "4", "5"])
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16, ticks=[1, 2, 3, 4, 5], labels=["1", "2", "3", "4", "5"])
 
 
-    plt.xlabel("Bullshit Score", fontsize=16, labelpad=10)
-    plt.ylabel("Rating (Stars)", fontsize=16, labelpad=10)
+    plt.xlabel("Bullshit Score", fontsize=20, labelpad=10)
+    plt.ylabel("Star Rating", fontsize=20, labelpad=10)
     plt.grid(False)
-    plt.legend(loc="lower right", fontsize=14)
+    plt.legend(loc="lower right", fontsize=18)
     plt.tight_layout()
 
     # Save the figure
