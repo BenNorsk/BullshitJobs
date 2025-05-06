@@ -265,8 +265,8 @@ def plot_ratings_regressions(df) -> None:
 
 
     # Regression lines
-    sns.regplot(x=df["bs_score_binary_dict"], y=df["rating"], scatter=False, color="#FF827B", label="Dict. BS-Score Regression", line_kws={"linestyle": "--"})
-    sns.regplot(x=df["bs_score_llm"], y=df["rating"], scatter=False, color="#4E95D9", label="LLM BS-Score Regression", line_kws={"linestyle": "--"})
+    sns.regplot(x=df["bs_score_binary_dict"], y=df["rating"], scatter=False, ci=95, color="#FF827B", label="Dict. BS-Score Regression", line_kws={"linestyle": "--"})
+    sns.regplot(x=df["bs_score_llm"], y=df["rating"], scatter=False, ci=95, color="#4E95D9", label="LLM BS-Score Regression", line_kws={"linestyle": "--"})
 
     # Plot Dictionary scores
     sizes_dict = get_sizes(df["bs_score_binary_dict"], df["rating"])
@@ -296,18 +296,70 @@ def plot_ratings_regressions(df) -> None:
     plt.show()
 
 
+def plot_validators_regressions(df) -> None:
+    # Filter all null values
+    df = df[df["bs_score_llm"].notnull() & df["bs_score_binary_dict"].notnull() & df["bs_score_validated_uniform"].notnull()]
+
+    # Set the font to Futura
+    mpl.rcParams['font.family'] = 'Futura'
+
+    plt.figure(figsize=(8, 6))
+
+    # Count duplicates and normalize sizes
+    def get_sizes(x, y):
+        counts = Counter(zip(x, y))
+        sizes = [counts[(a, b)] for a, b in zip(x, y)]
+        # Normalize to range 20–200
+        sizes = np.interp(sizes, (min(sizes), max(sizes)), (20, 200))
+        return sizes
+
+
+    # Regression lines
+    sns.regplot(x=df["bs_score_binary_dict"], y=df["bs_score_validated_uniform"], scatter=False, color="#FF827B", label="Dict. BS-Score Regression", line_kws={"linestyle": "--"})
+    sns.regplot(x=df["bs_score_llm"], y=df["bs_score_validated_uniform"], scatter=False, color="#4E95D9", label="LLM BS-Score Regression", line_kws={"linestyle": "--"})
+
+    # Plot Dictionary scores
+    sizes_dict = get_sizes(df["bs_score_binary_dict"], df["rating"])
+    plt.scatter(df["bs_score_binary_dict"], df["bs_score_validated_uniform"], 
+                s=sizes_dict, alpha=1.0, label="Data Point of Dict. BS-Score", marker='x', color="#a0a0a0", linewidths=0.7)
+    
+    # Plot LLM scores
+    sizes_llm = get_sizes(df["bs_score_llm"], df["bs_score_validated_uniform"])
+    plt.scatter(df["bs_score_llm"], df["bs_score_validated_uniform"], 
+                s=sizes_llm, alpha=1.0, label="Data Point of LLM BS-Score", marker='o', color="none", facecolors='none', edgecolors="#a0a0a0", linewidths=0.7)
+
+
+    # Make the axis labels larger
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+
+
+    plt.xlabel("Bullshit Score", fontsize=20, labelpad=10)
+    plt.ylabel("Human-Validated Bullshit Score", fontsize=20, labelpad=10)
+    plt.grid(False)
+    plt.legend(loc="lower right", fontsize=18)
+    plt.tight_layout()
+
+    # Save the figure
+    plt.savefig("figures/instrument_validation/validators_regressions.png", dpi=300, bbox_inches='tight')
+
+    plt.show()
+
+
+
 
 if __name__ == "__main__":
     # Load the data
     df = pd.read_pickle("data/master_data.pkl")
     # df1 = df[df["bs_score_validated_uniform"].notnull()]
-    # df2 = df[df["bs_score_validated_random"].notnull()]
+    # # df2 = df[df["bs_score_validated_random"].notnull()]
 
-    # # Define the bs_score_binary_dict and bs_score_llm columns
-    # bs_score_binary_dict = df2[["bs_score_binary_dict", "bs_score_validated_random"]]
+    # # # Define the bs_score_binary_dict and bs_score_llm columns
+    # # bs_score_binary_dict = df2[["bs_score_binary_dict", "bs_score_validated_random"]]
     # bs_score_llm = df1["bs_score_llm"]
     # x_1 = df1["bs_score_validator_1"] # colour = #95C591
     # x_2 = df1["bs_score_validator_2"] # colour = #2B3674
+
     # x = df1["bs_score_validated_uniform"] # Joint colour: #36868D
     
     # # Plot the uniform instrument validation
@@ -322,3 +374,4 @@ if __name__ == "__main__":
 
     # Plot the ratings regressions
     plot_ratings_regressions(df)
+    # plot_validators_regressions(df)

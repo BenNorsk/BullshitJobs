@@ -200,6 +200,60 @@ def ratings_results_table(df):
     with open("tables/instrument_validation/dict_model_ratings_ols_results_table.tex", "w") as f:
         f.write(df_results.to_latex(escape=False, index=True, float_format="%.3f"))
 
+def validators_results_table(df):
+    # Define the dependent and independent variables
+    x = df["bs_score_llm"]
+    y = df["bs_score_validated_uniform"]
+
+    # Run OLS regression for the main model
+    model_beta = run_ols(x, y)
+
+    print(model_beta.summary())
+
+    # Extract the results in a table, with the coefficients in the first column,
+    # and the metrics in the first row
+    df_results = pd.DataFrame({
+        "Coef.": model_beta.params,
+        "Std. Err.": model_beta.bse,
+        r"$CI_{2.5\%}$": model_beta.conf_int().iloc[:, 0],
+        r"$CI_{97.5\%}$": model_beta.conf_int().iloc[:, 1],
+        "p-value": model_beta.pvalues,
+    })
+    df_results.index = ["Intercept", "bs_score_llm"]
+
+    # Round all values to 3 decimal places
+    df_results = df_results.round(3)
+
+    # Save the results to a LaTeX file
+    with open("tables/instrument_validation/llm_model_validators_results_table.tex", "w") as f:
+        f.write(df_results.to_latex(escape=False, index=True, float_format="%.3f"))
+    print(df_results)
+
+    # Now repeat the same thing for x = bs_score_binary_dict
+    x = df["bs_score_binary_dict"]
+    y = df["bs_score_validated_uniform"]
+
+    model_delta = run_ols(x, y)
+
+    print(model_delta.summary())
+    # Extract the results in a table, with the coefficients in the first column,
+    # and the metrics in the first row
+
+    df_results = pd.DataFrame({
+        "Coef.": model_delta.params,
+        "Std. Err.": model_delta.bse,
+        r"$CI_{2.5\%}$": model_delta.conf_int().iloc[:, 0],
+        r"$CI_{97.5\%}$": model_delta.conf_int().iloc[:, 1],
+        "p-value": model_delta.pvalues,
+    })
+
+    df_results.index = ["Intercept", "bs_score_binary_dict"]
+    # Round all values to 3 decimal places
+
+    df_results = df_results.round(3)
+    # Save the results to a LaTeX file
+    with open("tables/instrument_validation/dict_model_validators_ols_results_table.tex", "w") as f:
+        f.write(df_results.to_latex(escape=False, index=True, float_format="%.3f"))
 
 if __name__ == "__main__":
     # Load the data
@@ -209,3 +263,4 @@ if __name__ == "__main__":
     # Save the bs_score_llm ols table 
     # llm_results_table(df_uniform)
     ratings_results_table(df)
+    validators_results_table(df_uniform)
