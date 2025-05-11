@@ -66,46 +66,6 @@ def _extract_text_from_answer(answer: str) -> Optional[str]:
     return bs_score
 
 
-# def _send_text_to_llm_deepseek(text: str):
-#     """
-#     Sends a text to the LLM model and returns the bullshit score.
-
-#     Parameters:
-#     -----------
-#     text: str
-#         The text to send to the LLM model.
-
-#     Returns:
-#     --------
-#     response: requests.models.Response
-#         The response from the LLM model
-#     """
-#     # API Key
-#     api_key = ""
-
-#     # Make this into a python request
-#     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
-
-#     # Set the message
-#     messages = [{"role": "user", "content": text}]
-#     response = client.chat.completions.create(
-#         model="deepseek-chat",
-#         messages=messages
-#     )
-
-#     # Retrieve the response
-#     response = client.chat.completions.create(
-#         model="deepseek-chat",
-#         messages=messages
-#     )
-
-    
-#     content = response.choices[0].message.content
-
-#     return content
-
-
-
 def _send_text_to_llm_openai(text: str, nr: str):
     """
     Sends a text to the OpenAI GPT-3.5 Turbo model and returns the bullshit score.
