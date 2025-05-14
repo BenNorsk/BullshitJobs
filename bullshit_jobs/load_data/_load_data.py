@@ -1,6 +1,7 @@
 import pandas as pd
 import pathlib
 import re
+import numpy as np
 
 
 def _clean_data(df: pd.DataFrame, selected_companies: pd.DataFrame) -> pd.DataFrame:
@@ -189,10 +190,108 @@ def _remerge_data() -> pd.DataFrame:
     return df
 
 
+def add_week_numeric_columns(df, date_col='date', rto_col='return_to_office'):
+    # Convert to datetime if needed
+    df[date_col] = pd.to_datetime(df[date_col], errors='coerce')
+    df[rto_col] = pd.to_datetime(df[rto_col], errors='coerce')
+
+    # Compute the reference week (week 0) from the date column
+    min_week = df[date_col].dropna().min().to_period('W').start_time
+
+    # Compute number of weeks since min_week, handling NAs properly
+    df['date_week_numeric'] = df[date_col].apply(
+        lambda d: ((d - min_week).days // 7) if pd.notna(d) else np.nan
+    ).astype('Int64')  # allows for NA-safe integers
+
+    df['return_to_office_week_numeric'] = df[rto_col].apply(
+        lambda d: ((d - min_week).days // 7) if pd.notna(d) else np.nan
+    ).astype('Int64')
+
+    return df
+
+
+def add_firm_id_to_master_data() -> pd.DataFrame:
+    """
+    Adds the firm_id to the master data.
+
+    Returns:
+    --------
+    df: pd.DataFrame
+        The DataFrame with the firm_id added.
+    """
+    # Load the data
+    df = _quick_load("master_data.pkl")
+
+    # Print the data
+    print(df)
+
+    # Get all unique firms
+    firms = df["firm"].unique()
+    print(f"The unique firms are: {firms}")
+
+    # Print the number of unique firms
+    print(f"The number of unique firms is: {len(firms)}")
+
+    # Order the firms alphabetically
+    firms = sorted(firms)
+
+    # Create a dictionary with the firm_id
+    firm_id_dict = {firm: i for i, firm in enumerate(firms)}
+    print(f"The firm_id dictionary is: {firm_id_dict}")
+
+    # Add a new firm_id column to the dataframe
+    df["firm_id"] = df["firm"].map(firm_id_dict)
+    print(f"The firm_id column has been added to the dataframe: {df}")
+
+    print(df)
+
+    # Transform the weeks
+    df = add_week_numeric_columns(df, date_col='date', rto_col='return_to_office')
+    print(f"The weeks have been transformed: {df}")
+
+    print(df)
+
+    # Aggregate the data on a firm level. Keep the columns firm_id, firm, date_week_numeric, return_to_office_week_numeric
+    # bs_score_binary_dict (average), bs_score_llm (average), rating (average), review_id (count)
+    # Career Opportunities	Compensation and Benefits	Senior Management	Work/Life Balance	Culture & Values	Diversity & Inclusion
+    # List of columns to average
+    score_columns = [
+        'bs_score_binary_dict', 'bs_score_llm', 'rating',
+        'Career Opportunities', 'Compensation and Benefits',
+        'Senior Management', 'Work/Life Balance',
+        'Culture & Values', 'Diversity & Inclusion'
+    ]
+
+    # Convert all score columns to numeric
+    for col in score_columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    # Perform aggregation
+    agg_df = df.groupby(['firm_id', 'firm', 'date', 'date_week_numeric', 'return_to_office', 'return_to_office_week_numeric']).agg(
+        review_count=('review_id', 'count'),
+        **{col: (col, 'mean') for col in score_columns}
+    ).reset_index()
+
+    # Reorder the columns
+    cols = score_columns + ['firm_id', 'firm', 'date', 'date_week_numeric', 'return_to_office', 'return_to_office_week_numeric'] + ['review_count']
+    agg_df = agg_df[cols]
+
+    # Print the unique return_to_office values
+    print(f"The unique return_to_office values are: {agg_df['return_to_office'].unique()}")
+
+    print(agg_df)
+
+    # Save the data
+    _save_data(agg_df, "master_data_firm")
+
+    return df
+
+
 if __name__ == "__main__":
     # Load the data
-    df = _load_new_and_save()
-    print(df)
+    # df = _load_new_and_save()
+    # print(df)
+    add_firm_id_to_master_data()
 
 
 
