@@ -335,7 +335,7 @@ def plot_validators_regressions(df) -> None:
 
 
     plt.xlabel("Bullshit Score", fontsize=20, labelpad=10)
-    plt.ylabel("Human-Validated Bullshit Score", fontsize=20, labelpad=10)
+    plt.ylabel("Human-Assessed Bullshit Score", fontsize=20, labelpad=10)
     plt.grid(False)
     plt.legend(loc="lower right", fontsize=18)
     plt.tight_layout()
@@ -345,6 +345,60 @@ def plot_validators_regressions(df) -> None:
 
     plt.show()
 
+def criterion_validity_regression(df):
+    """
+    Run a regression of the criterion validity of both bullshit scores.
+    
+    Parameters:
+    -----------
+    df: pd.DataFrame
+        The DataFrame containing the data.
+
+    Returns:
+    --------
+    None
+    """
+    # Filter all null values
+    df = df[df["bs_score_llm"].notnull() & df["bs_score_binary_dict"].notnull()]
+
+    # Count duplicates and normalize sizes
+    def get_sizes(x, y):
+        counts = Counter(zip(x, y))
+        sizes = [counts[(a, b)] for a, b in zip(x, y)]
+        # Normalize to range 20–200
+        sizes = np.interp(sizes, (min(sizes), max(sizes)), (20, 200))
+        return sizes
+
+    # Set the font to Futura
+    mpl.rcParams['font.family'] = 'Futura'
+
+    plt.figure(figsize=(8, 6))
+
+    # Regression line
+    sns.regplot(x=df["bs_score_llm"], y=df["bs_score_binary_dict"], scatter=False, color="#4E95D9", label="Regression Line", line_kws={"linestyle": "--"})
+
+    # Plot LLM Scores
+    sizes_llm = get_sizes(df["bs_score_llm"], df["bs_score_binary_dict"])
+    plt.scatter(df["bs_score_llm"], df["bs_score_binary_dict"], 
+                s=sizes_llm, alpha=1.0, label="Data Point", marker='o', color="none", facecolors='none', edgecolors="#a0a0a0", linewidths=0.7)
+    
+
+    # Make the axis labels larger
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+
+    # Set the y-axis label
+    plt.ylabel("Dictionary Bullshit Score", fontsize=20, labelpad=10)
+
+
+    # Set the x-axis label
+    plt.xlabel("LLM Bullshit Score", fontsize=20, labelpad=10)
+
+    # Add a legend
+    plt.legend(loc="lower right", fontsize=18)
+
+    # Save the figure
+    plt.savefig("figures/instrument_validation/criterion_validity_regression.png", dpi=300, bbox_inches='tight')
 
 
 
@@ -373,5 +427,6 @@ if __name__ == "__main__":
     # plot_logit_analysis(bs_score_binary_dict)
 
     # Plot the ratings regressions
-    plot_ratings_regressions(df)
+    # plot_ratings_regressions(df)
     # plot_validators_regressions(df)
+    criterion_validity_regression(df)

@@ -255,6 +255,49 @@ def validators_results_table(df):
     with open("tables/instrument_validation/dict_model_validators_ols_results_table.tex", "w") as f:
         f.write(df_results.to_latex(escape=False, index=True, float_format="%.3f"))
 
+
+def print_statistics(var, df):
+    """
+    Prints the mean, standard deviation, and number of observations for a given variable in a DataFrame.
+    
+    Parameters:
+    -----------
+    var: str
+        The name of the variable to analyze.
+    df: pd.DataFrame
+        The DataFrame containing the data.
+    """
+    col = df[var]
+    
+    # Make a new dataframe
+    df_stats = pd.DataFrame({
+        "Mean": [col.mean()],
+        "Std. Dev.": [col.std()],
+        "25%": [col.quantile(0.25)],
+        "50%": [col.median()],
+        "75%": [col.quantile(0.75)],
+        "N": [col.count()],
+        "Min": [col.min()],
+        "Max": [col.max()]
+    })
+
+    print(df_stats)
+
+def reg_dict_on_llm():
+    """
+    Run a regression of the dictionary-based bullshit score on the LLM bullshit score.
+    """
+    # Load the data
+    df = pd.read_pickle("data/master_data.pkl")
+    # Define the dependent and independent variables
+    x = df["bs_score_llm"]
+    y = df["bs_score_binary_dict"]
+
+    # Run OLS regression for the main model
+    model_beta = run_ols(x, y)
+
+    print(model_beta.summary())
+
 if __name__ == "__main__":
     # Load the data
     df = pd.read_pickle("data/master_data.pkl")
@@ -262,5 +305,8 @@ if __name__ == "__main__":
 
     # Save the bs_score_llm ols table 
     # llm_results_table(df_uniform)
-    ratings_results_table(df)
+    # ratings_results_table(df)
     validators_results_table(df_uniform)
+    # print_statistics("bs_score_llm", df_uniform)
+    # print_statistics("bs_score_llm", df)
+    # reg_dict_on_llm()
