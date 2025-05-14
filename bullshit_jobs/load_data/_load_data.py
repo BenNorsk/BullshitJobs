@@ -286,12 +286,21 @@ def add_firm_id_to_master_data() -> pd.DataFrame:
 
     return df
 
+def change_master_card_to_finance():
+    df = _quick_load("master_data.pkl")
+    # Change the sector of "Mastercard" to "finance"
+    df.loc[df["firm"] == "Mastercard", "sector"] = "finance"
+    # Save the data
+    _save_data(df, "master_data")
+    return df
+
 
 if __name__ == "__main__":
     # Load the data
     # df = _load_new_and_save()
     # print(df)
-    add_firm_id_to_master_data()
+    # add_firm_id_to_master_data()
+    change_master_card_to_finance()
 
 
 
