@@ -294,12 +294,17 @@ def summary_stats():
     min_values = df_rating.min()
     # Get the max values
     max_values = df_rating.max()
+
+    # Count how many observations have a rating
+    num_observations = df_rating.count()
+
     # Combine the results into a new DataFrame
     summary_rating_df = pd.DataFrame({
         "Mean": mean_values,
         "Std. Dev.": std_values,
         "Min": min_values,
-        "Max": max_values
+        "Max": max_values,
+        "Count": num_observations
     })
     print(summary_rating_df)
 
@@ -318,6 +323,212 @@ def show_min_max_dates():
     print(f"The min date is: {min_date}")
     print(f"The max date is: {max_date}")
 
+
+def create_name_of_reference(rto_row):
+    return f"{rto_row['firm']}_rto_policy".lower().replace("-", "_").replace("(", "").replace(")","").replace("&", "").replace(" ", "_").replace(",", "_").replace(".", "_").replace("'", "").replace('"', "").replace(":", "").replace(";", "").replace("!", "").replace("?", "").replace("@", "").replace("#", "").replace("$", "").replace("%", "").replace("^", "").replace("&", "").replace("*", "").replace("+", "").replace("=", "")
+
+
+def create_bib_tex_reference(rto_row):
+    author = rto_row["author"]
+    title = rto_row["title"]
+
+    # Convert the date to datetime
+    date = pd.to_datetime(rto_row["date"], errors="coerce")
+
+    # Get the year
+    year = date.year
+
+    # Get the month
+    month = date.month
+
+    # Get the day
+    day = date.day
+
+    # Get the URL
+    url = rto_row["link"]
+
+    # Format the URL to remove the ? af
+    clean_url = url.split('?')[0]
+
+
+    # Get the journal
+    journal = rto_row["journal"]
+
+    # Get the name of the firm
+    firm = rto_row["firm"]
+
+    # Create the bibtex reference
+    if isinstance(author, str) and author != "" and author != "nan":
+        bibtex = f"""
+            @article{{{create_name_of_reference(rto_row)},
+            author  = {{{author}}},
+            title   = {{{{{title}}}}},
+            journal = {{{{{journal}}}}},
+            year    = {{{year}}},
+            month   = {{{month}}},
+            day     = {{{day}}},
+            url     = {{{clean_url}}}
+            }}
+        """
+    else:
+        bibtex = f"""
+            @misc{{{create_name_of_reference(rto_row)},
+            title   = {{{{{title}}}}},
+            journal = {{{{{journal}}}}},
+            year    = {{{year}}},
+            month   = {{{month}}},
+            day     = {{{day}}},
+            url     = {{{clean_url}}}
+            }}
+        """
+
+    print(bibtex)
+    return bibtex
+
+
+def create_bib_tex_file(df_rto):
+    # Bibtex string
+    bibtex_string = ""
+
+    # Loop through the rows of the dataframe
+    for index, row in df_rto.iterrows():
+        # Create the bibtex reference
+        bibtex = create_bib_tex_reference(row)
+
+        # Add the bibtex reference to the string
+        bibtex_string += bibtex
+
+        # Add the two new lines
+        bibtex_string += "\n\n"
+    
+    # Write the bibtex string to a file
+    with open("tables/rto_bibtex.bib", "w") as f:
+        f.write(bibtex_string)
+
+
+def create_citation(rto_row):
+    return f'(\cite{{{create_name_of_reference(rto_row)}}})'
+
+def create_the_rto_list():
+    # Read in the master data
+    df = pd.read_csv("data/master_data.csv")
+
+    # Read in the Tracking_Return_To_Office.xlsx file
+    df_rto = pd.read_excel("data/Tracking_Return_To_Office.xlsx", sheet_name="RTO")
+    print(df_rto)
+    print(df)
+
+    # Select all unique firms in the master data
+    unique_firms = df["firm"].unique()
+
+    # Filter the RTO data to only include the firms in the master data
+    df_rto = df_rto[df_rto["firm"].isin(unique_firms)]
+
+    # Get the count of each firm in master data
+    firm_counts = df["firm"].value_counts()
+
+    # Add the count to the RTO data
+    df_rto["count"] = df_rto["firm"].map(firm_counts)
+
+    # Write the bibtex file
+    create_bib_tex_file(df_rto)
+
+    # Add the bibtex reference to the RTO data
+    df_rto["Reference"] = df_rto.apply(create_citation, axis=1)
+
+    # Order the df_rto by sector (technology, manufacturing, finance, telecom)
+    sector_order = ["technology", "manufacturing", "finance", "telecom"]
+    df_rto["sector"] = pd.Categorical(df_rto["sector"], categories=sector_order, ordered=True)
+    df_rto = df_rto.sort_values(["sector", "firm"], ascending=[True, True])
+
+    # Within each sector, order by count
+    df_rto = df_rto.sort_values(["sector", "count"], ascending=[True, False])
+
+    # Make all sector names first letter capital
+    df_rto["sector"] = df_rto["sector"].str.capitalize()
+
+    # Remove the journal, author, and title columns
+    df_rto = df_rto.drop(columns=["journal", "author", "title", "link", "date"])
+
+    # Rename the columns
+    df_rto = df_rto.rename(columns={
+        "firm": "Firm",
+        "sector": "Sector",
+        "count": "Count",
+        "return_to_office": "RTO Date",
+        "Reference": "Reference"
+    })
+
+    # Format the RTO date to May 6th, 2022 (example)
+    df_rto["RTO Date"] = pd.to_datetime(df_rto["RTO Date"], errors="coerce").dt.strftime("%B %d, %Y")
+
+    # Make the RTO date a string
+    df_rto["RTO Date"] = df_rto["RTO Date"].astype(str)
+
+
+    # Write the dataframe to a latex file
+    with open("tables/rto_list.tex", "w") as f:
+        f.write(df_rto.to_latex(index=False, escape=False, float_format="%.1f"))
+    
+    print(df_rto)
+
+
+def summary_stats_on_all_vars():
+    df = pd.read_csv("data/master_data.csv")
+
+    score_columns = [
+        'rating',
+        'Career Opportunities', 'Compensation and Benefits',
+        'Senior Management', 'Work/Life Balance',
+        'Culture & Values', 'Diversity & Inclusion'
+    ]
+
+    # Convert all score columns to numeric
+    for col in score_columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    
+    # Give summary statistics
+    summary_df = df[score_columns].describe()
+
+    # Transpose the summary_df
+    summary_df = summary_df.T
+
+    # Remove the quantiles
+    summary_df = summary_df.drop(columns=["25%", "50%", "75%", "min", "max"])
+
+    # Round to 3 decimal places
+    summary_df = summary_df.round(3)
+
+    # Make the count an integer
+    summary_df["count"] = summary_df["count"].astype(int)
+
+    print(summary_df)
+
+    # Save the summary_df to a latex file
+    with open("tables/data_covariates.tex", "w") as f:
+        f.write(summary_df.to_latex(index=True, escape=False, float_format="%.3f"))
+
+def stats_on_string_cols():
+
+    df = pd.read_csv("data/master_data.csv")
+
+    cols = df.columns[~df.columns.isin(["rating", "bs_score_binary_dict", "bs_score_llm"])].to_list()
+
+    # Remove all score cols
+    score_columns = [
+        'rating',
+        'Career Opportunities', 'Compensation and Benefits',
+        'Senior Management', 'Work/Life Balance',
+        'Culture & Values', 'Diversity & Inclusion'
+    ]
+    cols = [col for col in cols if col not in score_columns]
+
+    # Print all columns
+    print(cols)
+
+
+
 if __name__ == "__main__":
     # Load the data
     # df = pd.read_csv("data/master_data.csv")
@@ -327,4 +538,7 @@ if __name__ == "__main__":
     # plot_random_samples()
     # count_of_included_companies()
     # summary_stats()
-    show_min_max_dates()
+    # show_min_max_dates()
+    # create_the_rto_list()
+    # summary_stats_on_all_vars()
+    stats_on_string_cols()

@@ -282,9 +282,60 @@ def add_firm_id_to_master_data() -> pd.DataFrame:
     print(agg_df)
 
     # Save the data
-    _save_data(agg_df, "master_data_firm")
+    _save_data(agg_df, "master_data_panel")
 
     return df
+
+def make_master_data_cross_section():
+    # Load the data
+    df = _quick_load("master_data.pkl")
+
+    # Print the data
+    print(df)
+
+    # Get all unique firms
+    firms = df["firm"].unique()
+    print(f"The unique firms are: {firms}")
+
+    # Print the number of unique firms
+    print(f"The number of unique firms is: {len(firms)}")
+
+    # Order the firms alphabetically
+    firms = sorted(firms)
+
+    # Create a dictionary with the firm_id
+    firm_id_dict = {firm: i for i, firm in enumerate(firms)}
+    print(f"The firm_id dictionary is: {firm_id_dict}")
+
+    # Add a new firm_id column to the dataframe
+    df["firm_id"] = df["firm"].map(firm_id_dict)
+    print(f"The firm_id column has been added to the dataframe: {df}")
+
+    print(df)
+
+    # Transform the weeks
+    df = add_week_numeric_columns(df, date_col='date', rto_col='return_to_office')
+    print(f"The weeks have been transformed: {df}")
+
+    print(df)
+    print(df.columns)
+
+    # If return_to_office_week_numeric is NaN, set it to 0
+    df.loc[df["return_to_office_week_numeric"].isna(), "return_to_office_week_numeric"] = 0
+
+    # One hot encode each sector
+    sectors = df["sector"].unique()
+    print(f"The unique sectors are: {sectors}")
+
+    # Create a new column for each sector
+    for sector in sectors:
+        df[f'sector_{sector}'] = np.where(df["sector"] == sector, 1, 0)
+    print(f"The sectors have been one hot encoded: {df}")
+    print(df)
+
+    # Save as a cross-section
+    _save_data(df, "master_data_cross_section")
+
 
 def change_master_card_to_finance():
     df = _quick_load("master_data.pkl")
@@ -300,7 +351,8 @@ if __name__ == "__main__":
     # df = _load_new_and_save()
     # print(df)
     # add_firm_id_to_master_data()
-    change_master_card_to_finance()
+    # change_master_card_to_finance()
+    make_master_data_cross_section()
 
 
 
